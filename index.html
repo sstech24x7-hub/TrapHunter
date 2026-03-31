@@ -1,63 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrapHunter | Admin Setup</title>
+    <title>TrapHunter Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #121212; color: #fff; font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; }
-        .box { background: #1e1e1e; padding: 30px; border-radius: 12px; width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h3 { text-align: center; color: #ffc107; margin-top: 0; }
-        label { font-size: 13px; color: #aaa; margin-bottom: 5px; display: block; }
-        input, select { width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #333; background: #000; color: #fff; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #ffc107; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
-        button:hover { background: #e0a800; }
-        #msg { text-align: center; margin-top: 15px; font-size: 14px; }
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; justify-content: center; padding: 40px 20px; }
+        .card { background: #1e293b; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; }
+        h2 { color: #fbbf24; text-align: center; margin-bottom: 25px; letter-spacing: 1px; }
+        label { font-size: 12px; color: #94a3b8; margin-bottom: 8px; display: block; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 14px; }
+        button { width: 100%; padding: 15px; background: #fbbf24; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; color: #0f172a; transition: 0.3s; }
+        button:hover { background: #f59e0b; transform: scale(1.02); }
+        #status { text-align: center; margin-top: 20px; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
-
-<div class="box">
-    <h3>⚙️ TRAP ADMIN</h3>
-    
-    <label>Dhan Access Token</label>
-    <input type="text" id="token" placeholder="Paste Token Here...">
-    
-    <label>System Mode</label>
-    <select id="mode">
-        <option value="true">🟡 DEMO (Testing App)</option>
-        <option value="false">🟢 REAL (Live Market)</option>
-    </select>
-    
-    <button onclick="saveData()" id="btn">SAVE & ACTIVATE</button>
-    <p id="msg"></p>
-</div>
-
-<script>
-    const sb = supabase.createClient("https://gzpreidjzzswzeipuluv.supabase.co", "sb_publishable_7xpiWUCAZ_C0jojpz7ogDQ_IufROnjX");
-
-    async function saveData() {
-        const btn = document.getElementById('btn');
-        const msg = document.getElementById('msg');
-        const t = document.getElementById('token').value;
-        const m = document.getElementById('mode').value === "true";
-
-        btn.innerText = "Saving...";
+    <div class="card">
+        <h2>TRAP CONTROL</h2>
+        <label>Dhan Access Token</label>
+        <input type="text" id="t" placeholder="Paste New Token...">
         
-        try {
-            const { error } = await sb.from('settings').update({ access_token: t, is_test_mode: m }).eq('id', 1);
-            if(error) throw error;
-            msg.innerHTML = "✅ Saved! Python will auto-update.";
-            msg.style.color = "#4ade80";
-        } catch (e) {
-            msg.innerHTML = "❌ Error: " + e.message;
-            msg.style.color = "#f87171";
-        } finally {
-            btn.innerText = "SAVE & ACTIVATE";
-        }
-    }
-</script>
+        <label>System Mode</label>
+        <select id="m">
+            <option value="true">DEMO (Testing Mode)</option>
+            <option value="false">REAL (Live Trading)</option>
+        </select>
+        
+        <button onclick="save()">SAVE SETTINGS</button>
+        <div id="status"></div>
+    </div>
 
+    <script>
+        const sb = supabase.createClient("https://gzpreidjzzswzeipuluv.supabase.co", "sb_publishable_7xpiWUCAZ_C0jojpz7ogDQ_IufROnjX");
+        async function save() {
+            const btn = document.querySelector('button');
+            const st = document.getElementById('status');
+            btn.innerText = "SAVING...";
+            const { error } = await sb.from('settings').update({ 
+                access_token: document.getElementById('t').value, 
+                is_test_mode: document.getElementById('m').value === "true" 
+            }).eq('id', 1);
+            
+            if(error) { st.innerText = "❌ Error: " + error.message; st.style.color = "#f87171"; }
+            else { st.innerText = "✅ Settings Updated!"; st.style.color = "#4ade80"; }
+            btn.innerText = "SAVE SETTINGS";
+        }
+    </script>
 </body>
 </html>
