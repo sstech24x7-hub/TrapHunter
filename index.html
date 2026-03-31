@@ -3,113 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrapHunter | Admin Panel</title>
+    <title>TrapHunter | Admin Setup</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background: #0f172a; 
-            color: #f8fafc; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex; justify-content: center; align-items: center; min-height: 100vh;
-        }
-        .container {
-            background: #1e293b;
-            padding: 2.5rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            width: 90%; max-width: 450px;
-            border: 1px solid #334155;
-        }
-        h2 { color: #fbbf24; margin-bottom: 1.5rem; font-size: 1.6rem; text-align: center; letter-spacing: 2px; font-weight: 800; }
-        label { display: block; margin-bottom: 0.6rem; font-size: 0.9rem; color: #94a3b8; font-weight: 600; }
-        input, select {
-            width: 100%; padding: 0.8rem; margin-bottom: 1.5rem;
-            background: #0f172a; border: 1px solid #475569;
-            border-radius: 0.7rem; color: white; outline: none; font-size: 1rem;
-        }
-        input:focus { border-color: #fbbf24; box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2); }
-        button {
-            width: 100%; padding: 0.9rem; background: #fbbf24;
-            color: #0f172a; border: none; border-radius: 0.7rem;
-            font-weight: 900; font-size: 1.1rem; cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase;
-        }
-        button:hover { background: #f59e0b; transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.3); }
-        button:disabled { background: #64748b; cursor: not-allowed; transform: none; }
-        #status { margin-top: 1.2rem; text-align: center; font-size: 0.95rem; font-weight: 500; min-height: 1.5rem; }
-        .success { color: #4ade80; }
-        .error { color: #f87171; }
+        body { background: #121212; color: #fff; font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; }
+        .box { background: #1e1e1e; padding: 30px; border-radius: 12px; width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h3 { text-align: center; color: #ffc107; margin-top: 0; }
+        label { font-size: 13px; color: #aaa; margin-bottom: 5px; display: block; }
+        input, select { width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #333; background: #000; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #ffc107; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #e0a800; }
+        #msg { text-align: center; margin-top: 15px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>TRAP ADMIN</h2>
+<div class="box">
+    <h3>⚙️ TRAP ADMIN</h3>
     
     <label>Dhan Access Token</label>
-    <input type="text" id="tokenInput" placeholder="Paste eyJ... token here">
+    <input type="text" id="token" placeholder="Paste Token Here...">
     
-    <label>Trading System Mode</label>
-    <select id="modeSelect">
-        <option value="true">DEMO (Simulated Signals)</option>
-        <option value="false">REAL (Live Market Data)</option>
+    <label>System Mode</label>
+    <select id="mode">
+        <option value="true">🟡 DEMO (Testing App)</option>
+        <option value="false">🟢 REAL (Live Market)</option>
     </select>
     
-    <button onclick="handleUpdate()" id="saveBtn">UPDATE SETTINGS</button>
-    <p id="status"></p>
+    <button onclick="saveData()" id="btn">SAVE & ACTIVATE</button>
+    <p id="msg"></p>
 </div>
 
 <script>
-    // 1. Supabase Config (Using Unique Variable Names)
-    const SB_URL = "https://gzpreidjzzswzeipuluv.supabase.co";
-    const SB_KEY = "sb_publishable_7xpiWUCAZ_C0jojpz7ogDQ_IufROnjX";
-    
-    // Create the client using the library
-    const sbClient = supabase.createClient(SB_URL, SB_KEY);
+    const sb = supabase.createClient("https://gzpreidjzzswzeipuluv.supabase.co", "sb_publishable_7xpiWUCAZ_C0jojpz7ogDQ_IufROnjX");
 
-    async function handleUpdate() {
-        const btn = document.getElementById('saveBtn');
-        const statusMsg = document.getElementById('status');
-        const tokenVal = document.getElementById('tokenInput').value;
-        const isTestVal = document.getElementById('modeSelect').value === "true";
+    async function saveData() {
+        const btn = document.getElementById('btn');
+        const msg = document.getElementById('msg');
+        const t = document.getElementById('token').value;
+        const m = document.getElementById('mode').value === "true";
 
-        // Basic Validation
-        if (!tokenVal || tokenVal.length < 20) {
-            statusMsg.innerHTML = "<span class='error'>❌ Please enter a valid Token!</span>";
-            return;
-        }
-
-        // UI Feedback
-        btn.disabled = true;
-        btn.innerText = "UPDATING...";
-        statusMsg.innerText = "Connecting to Supabase...";
-
+        btn.innerText = "Saving...";
+        
         try {
-            // Updating the row where ID is 1
-            const { error } = await sbClient
-                .from('settings')
-                .update({ 
-                    access_token: tokenVal, 
-                    is_test_mode: isTestVal,
-                    updated_at: new Date().toISOString() 
-                })
-                .eq('id', 1);
-
-            if (error) throw error;
-
-            statusMsg.innerHTML = "<span class='success'>✅ Settings Saved Successfully!</span>";
-            
-            // Clear token input after success for security
-            // document.getElementById('tokenInput').value = ""; 
-
-        } catch (err) {
-            console.error("Update failed:", err);
-            statusMsg.innerHTML = `<span class='error'>❌ Error: ${err.message || 'Check connection'}</span>`;
+            const { error } = await sb.from('settings').update({ access_token: t, is_test_mode: m }).eq('id', 1);
+            if(error) throw error;
+            msg.innerHTML = "✅ Saved! Python will auto-update.";
+            msg.style.color = "#4ade80";
+        } catch (e) {
+            msg.innerHTML = "❌ Error: " + e.message;
+            msg.style.color = "#f87171";
         } finally {
-            btn.disabled = false;
-            btn.innerText = "UPDATE SETTINGS";
+            btn.innerText = "SAVE & ACTIVATE";
         }
     }
 </script>
