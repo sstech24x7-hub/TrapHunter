@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TrapHunter Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
+        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; }
+        button { background: #ffc107; font-weight: bold; cursor: pointer; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>TRAP ADMIN PANEL</h2>
+        <label>Dhan Access Token:</label>
+        <input type="text" id="token" placeholder="Paste New Token Here">
+        
+        <label>Trading Mode:</label>
+        <select id="mode">
+            <option value="true">DEMO MODE (Testing)</option>
+            <option value="false">REAL MODE (Live)</option>
+        </select>
+        
+        <button onclick="updateSettings()">SAVE SETTINGS</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        // Supabase Setup
+        const SB_URL = "https://gzpreidjzzswzeipuluv.supabase.co";
+        const SB_KEY = "sb_publishable_7xpiWUCAZ_C0jojpz7ogDQ_IufROnjX";
+        const supabase = supabase.createClient(SB_URL, SB_KEY);
+
+        async function updateSettings() {
+            const token = document.getElementById('token').value;
+            const isTest = document.getElementById('mode').value === "true";
+            
+            const { error } = await supabase
+                .from('settings')
+                .update({ access_token: token, is_test_mode: isTest })
+                .eq('id', 1);
+
+            if (error) alert("Error: " + error.message);
+            else document.getElementById('status').innerText = "✅ Settings Updated!";
+        }
+    </script>
+</body>
+</html>
