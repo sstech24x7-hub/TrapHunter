@@ -15,28 +15,30 @@
         }
         .container {
             background: #1e293b;
-            padding: 2rem;
+            padding: 2.5rem;
             border-radius: 1.5rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            width: 100%; max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 90%; max-width: 450px;
             border: 1px solid #334155;
         }
-        h2 { color: #fbbf24; margin-bottom: 1.5rem; font-size: 1.5rem; text-align: center; letter-spacing: 1px; }
-        label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #94a3b8; }
+        h2 { color: #fbbf24; margin-bottom: 1.5rem; font-size: 1.6rem; text-align: center; letter-spacing: 2px; font-weight: 800; }
+        label { display: block; margin-bottom: 0.6rem; font-size: 0.9rem; color: #94a3b8; font-weight: 600; }
         input, select {
-            width: 100%; padding: 0.75rem; margin-bottom: 1.25rem;
-            background: #0f172a; border: 1px solid #334155;
-            border-radius: 0.5rem; color: white; outline: none;
+            width: 100%; padding: 0.8rem; margin-bottom: 1.5rem;
+            background: #0f172a; border: 1px solid #475569;
+            border-radius: 0.7rem; color: white; outline: none; font-size: 1rem;
         }
-        input:focus { border-color: #fbbf24; }
+        input:focus { border-color: #fbbf24; box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2); }
         button {
-            width: 100%; padding: 0.75rem; background: #fbbf24;
-            color: #0f172a; border: none; border-radius: 0.5rem;
-            font-weight: bold; font-size: 1rem; cursor: pointer;
-            transition: all 0.3s ease;
+            width: 100%; padding: 0.9rem; background: #fbbf24;
+            color: #0f172a; border: none; border-radius: 0.7rem;
+            font-weight: 900; font-size: 1.1rem; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
         }
-        button:hover { background: #f59e0b; transform: translateY(-2px); }
-        #status { margin-top: 1rem; text-align: center; font-size: 0.875rem; min-height: 1.25rem; }
+        button:hover { background: #f59e0b; transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.3); }
+        button:disabled { background: #64748b; cursor: not-allowed; transform: none; }
+        #status { margin-top: 1.2rem; text-align: center; font-size: 0.95rem; font-weight: 500; min-height: 1.5rem; }
         .success { color: #4ade80; }
         .error { color: #f87171; }
     </style>
@@ -47,56 +49,64 @@
     <h2>TRAP ADMIN</h2>
     
     <label>Dhan Access Token</label>
-    <input type="text" id="token" placeholder="Paste eyJ... token here">
+    <input type="text" id="tokenInput" placeholder="Paste eyJ... token here">
     
-    <label>System Mode</label>
-    <select id="mode">
-        <option value="true">DEMO (Testing Mode)</option>
-        <option value="false">REAL (Live Market)</option>
+    <label>Trading System Mode</label>
+    <select id="modeSelect">
+        <option value="true">DEMO (Simulated Signals)</option>
+        <option value="false">REAL (Live Market Data)</option>
     </select>
     
-    <button onclick="saveSettings()" id="saveBtn">UPDATE SETTINGS</button>
+    <button onclick="handleUpdate()" id="saveBtn">UPDATE SETTINGS</button>
     <p id="status"></p>
 </div>
 
 <script>
-    // Supabase Configuration
+    // 1. Supabase Config (Using Unique Variable Names)
     const SB_URL = "https://gzpreidjzzswzeipuluv.supabase.co";
     const SB_KEY = "sb_publishable_7xpiWUCAZ_C0jojpz7ogDQ_IufROnjX";
-    const { createClient } = supabase;
-    const _supabase = createClient(SB_URL, SB_KEY);
+    
+    // Create the client using the library
+    const sbClient = supabase.createClient(SB_URL, SB_KEY);
 
-    async function saveSettings() {
+    async function handleUpdate() {
         const btn = document.getElementById('saveBtn');
-        const status = document.getElementById('status');
-        const tokenValue = document.getElementById('token').value;
-        const modeValue = document.getElementById('mode').value === "true";
+        const statusMsg = document.getElementById('status');
+        const tokenVal = document.getElementById('tokenInput').value;
+        const isTestVal = document.getElementById('modeSelect').value === "true";
 
-        if (!tokenValue) {
-            status.innerHTML = "<span class='error'>Token cannot be empty!</span>";
+        // Basic Validation
+        if (!tokenVal || tokenVal.length < 20) {
+            statusMsg.innerHTML = "<span class='error'>❌ Please enter a valid Token!</span>";
             return;
         }
 
+        // UI Feedback
         btn.disabled = true;
-        btn.innerText = "SAVING...";
-        status.innerText = "";
+        btn.innerText = "UPDATING...";
+        statusMsg.innerText = "Connecting to Supabase...";
 
         try {
-            const { error } = await _supabase
+            // Updating the row where ID is 1
+            const { error } = await sbClient
                 .from('settings')
                 .update({ 
-                    access_token: tokenValue, 
-                    is_test_mode: modeValue,
+                    access_token: tokenVal, 
+                    is_test_mode: isTestVal,
                     updated_at: new Date().toISOString() 
                 })
                 .eq('id', 1);
 
             if (error) throw error;
 
-            status.innerHTML = "<span class='success'>✅ Settings Saved Successfully!</span>";
+            statusMsg.innerHTML = "<span class='success'>✅ Settings Saved Successfully!</span>";
+            
+            // Clear token input after success for security
+            // document.getElementById('tokenInput').value = ""; 
+
         } catch (err) {
-            console.error(err);
-            status.innerHTML = `<span class='error'>❌ Error: ${err.message}</span>`;
+            console.error("Update failed:", err);
+            statusMsg.innerHTML = `<span class='error'>❌ Error: ${err.message || 'Check connection'}</span>`;
         } finally {
             btn.disabled = false;
             btn.innerText = "UPDATE SETTINGS";
